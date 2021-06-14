@@ -18,7 +18,6 @@
 # This notebook will first try to train the current VAE model before modifying the loss function to work with count data
 
 # %load_ext autoreload
-# %load_ext rpy2.ipython
 # %autoreload 2
 import os
 from ponyo import utils, train_vae_modules
@@ -31,7 +30,7 @@ base_dir = os.path.abspath(os.path.join(os.getcwd(), "../"))
 
 # Read in config variables
 config_filename = os.path.abspath(
-    os.path.join(base_dir, "configs", "config_human_general.tsv")
+    os.path.join(base_dir, "test_vae_training", "config_current_vae.tsv")
 )
 
 params = utils.read_config(config_filename)
