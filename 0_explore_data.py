@@ -35,23 +35,28 @@ print(microbiome_data.shape)
 microbiome_data.head()
 
 # How sparse is this data matrix?
-# How many 0s
+# How many 0s across the entire matrix?
 num_zeros = (microbiome_data == 0).sum().sum()
 total = microbiome_data.shape[0] * microbiome_data.shape[1]
 num_zeros / total
 
 # Number of 0's per taxa
-zero_per_taxa = sns.displot((microbiome_data == 0).sum())
+zero_per_taxa = sns.histplot((microbiome_data == 0).sum())
 plt.show(zero_per_taxa)
+plt.ylabel("Count")
+plt.xlabel("Number of 0's per taxa")
+plt.title("Distribution of 0's per taxa")
 
 # Plot distribution of abundances per taxa
-boxplot = np.log10(1 + microbiome_data).boxplot(rot=90, fontsize=5)
+boxplot = np.log10(1 + microbiome_data.sample(n=10, axis="columns")).boxplot(
+    rot=90, fontsize=15
+)
 
 plt.show(boxplot)
-plt.set_title("log10 abundance per taxa")
+plt.ylabel("log10 abundance")
+plt.xlabel("Random set of 10 taxa")
+plt.title("log10 abundance per taxa")
 
-# What is the range of values per feature (taxa)
-microbiome_data.min()
-
-# What is the range of values per feature (taxa)
-microbiome_data.max()
+# **Takeaway**:
+#
+# Overall we can see that our input data is _very_ sparse. Most taxa only found in a small subset of samples. We will need to modify our VAE model to account for this sparsity.
