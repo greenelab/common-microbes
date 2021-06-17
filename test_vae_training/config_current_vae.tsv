@@ -2,9 +2,9 @@ local_dir	"/home/alexandra/Documents/Data/Common_microbes/"
 dataset_name	"test_vae_training"
 normalized_compendium_filename	"/home/alexandra/Documents/Data/Common_microbes/studies_consolidated.tsv"
 NN_architecture	"NN_2500_30"
-learning_rate	0.001
+learning_rate	0.01
 batch_size	10
-epochs	40
+epochs	100
 kappa	0.01
 intermediate_dim	2500
 latent_dim	30

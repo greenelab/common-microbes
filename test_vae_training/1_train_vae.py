@@ -19,7 +19,10 @@
 
 # %load_ext autoreload
 # %autoreload 2
+# %matplotlib inline
 import os
+import matplotlib.pyplot as plt
+import pandas as pd
 from ponyo import utils, train_vae_modules
 
 # Set seeds to get reproducible VAE trained models
@@ -56,3 +59,14 @@ for each_dir in output_dirs:
 
 # Train VAE on new compendium data
 train_vae_modules.train_vae(config_filename, normalized_compendium_filename)
+
+# +
+# Plot training and validation loss separately
+stat_logs_filename = "logs/NN_2500_30/tybalt_2layer_30latent_stats.tsv"
+
+stats = pd.read_csv(stat_logs_filename, sep="\t", index_col=None, header=0)
+# -
+
+plt.plot(stats["loss"])
+
+plt.plot(stats["val_loss"], color="orange")
