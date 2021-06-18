@@ -40,7 +40,21 @@ params = utils.read_config(config_filename)
 
 dataset_name = params["dataset_name"]
 
+raw_compendium_filename = params["raw_compendium_filename"]
 normalized_compendium_filename = params["normalized_compendium_filename"]
+# -
+
+# Try normalzing the data
+train_vae_modules.normalize_expression_data(
+    base_dir, config_filename, raw_compendium_filename, normalized_compendium_filename
+)
+
+test1 = pd.read_csv(raw_compendium_filename, sep="\t")
+test2 = pd.read_csv(normalized_compendium_filename, sep="\t")
+
+test1.head()
+
+test2.head()
 
 # +
 # Create VAE directories if needed
