@@ -21,11 +21,11 @@ from cm_modules import paths
 
 # +
 # Load dataset
+# Dataset is of the form sample x taxon
 # Each column is a bacterial taxon, and each row is a single sample.
 # Rows are named using the format "${PROJECT_ID}_${SAMPLE_ID}"
 # Each cell is a read count.
 # There are ~11,800 samples in the preliminary dataset.
-# sample x taxon
 
 microbiome_data_filename = paths.RAW_MICROBIOME_DATA
 microbiome_data = pd.read_csv(microbiome_data_filename, sep="\t", index_col=0, header=0)

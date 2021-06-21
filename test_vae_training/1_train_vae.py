@@ -45,6 +45,8 @@ normalized_compendium_filename = params["normalized_compendium_filename"]
 # -
 
 # Try normalzing the data
+# Here we are normalizing the microbiome count data per taxon
+# so that each taxon is in the range 0-1
 train_vae_modules.normalize_expression_data(
     base_dir, config_filename, raw_compendium_filename, normalized_compendium_filename
 )
