@@ -40,22 +40,22 @@ num_zeros = (microbiome_data == 0).sum().sum()
 total = microbiome_data.shape[0] * microbiome_data.shape[1]
 num_zeros / total
 
-# Number of 0's per taxa
-zero_per_taxa = sns.histplot((microbiome_data == 0).sum())
-plt.show(zero_per_taxa)
+# Number of 0's per taxon
+zero_per_taxon = sns.histplot((microbiome_data == 0).sum())
+plt.show(zero_per_taxon)
 plt.ylabel("Count")
-plt.xlabel("Number of 0's per taxa")
-plt.title("Distribution of 0's per taxa")
+plt.xlabel("Number of 0's per taxon")
+plt.title("Distribution of 0's per taxon")
 
-# Plot distribution of abundances per taxa
+# Plot distribution of abundances per taxon
 boxplot = np.log10(1 + microbiome_data.sample(n=10, axis="columns")).boxplot(
     rot=90, fontsize=15
 )
 
 plt.show(boxplot)
 plt.ylabel("log10 abundance")
-plt.xlabel("Random set of 10 taxa")
-plt.title("log10 abundance per taxa")
+plt.xlabel("Random set of 10 taxon")
+plt.title("log10 abundance per taxon")
 
 # **Takeaway**:
 #
