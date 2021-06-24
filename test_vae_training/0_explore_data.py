@@ -8,7 +8,7 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:microbe] *
+#     display_name: Python [conda env:microbe]
 #     language: python
 #     name: conda-env-microbe-py
 # ---

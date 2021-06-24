@@ -1,4 +1,4 @@
-name: microbe
+name: common_microbe
 
 channels:
 - conda-forge
@@ -21,3 +21,4 @@ dependencies:
   - flake8==3.8.4
   - pre_commit==2.9.3
   - jupytext==1.9.1
+  - pynndescent
