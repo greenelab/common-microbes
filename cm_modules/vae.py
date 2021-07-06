@@ -223,8 +223,10 @@ def run_tybalt_training(
         original_dim, z_log_var_encoded, z_mean_encoded, beta
     )([expression_input, expression_reconstruct])
     vae = Model(expression_input, vae_layer)
-    # Update loss here
-    vae.compile(optimizer=adam, loss=zinbl2, loss_weights=[beta])
+
+    # UPDATE LOSS HERE
+    # vae.compile(optimizer=adam, loss=None, loss_weights=[beta])
+    vae.compile(optimizer=adam, loss=zinbl2)
 
     # Training
 

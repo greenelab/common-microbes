@@ -3,10 +3,10 @@ dataset_name	"test_vae_training"
 raw_compendium_filename	"/home/alexandra/Documents/Data/Common_microbes/studies_consolidated.tsv"
 normalized_compendium_filename	"/home/alexandra/Documents/Data/Common_microbes/studies_consolidated_normalized.tsv.xz"
 scaler_transform_filename	"/home/alexandra/Documents/Data/Common_microbes/scaler_transform_microbiome.pickle"
-NN_architecture	"NN_2500_30"
+NN_architecture	"DCA"
 learning_rate	0.001
 batch_size	100
-epochs	60
+epochs	5
 kappa	0.01
 intermediate_dim	2500
 latent_dim	30

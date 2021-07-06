@@ -8,7 +8,7 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:microbe] *
+#     display_name: Python [conda env:microbe]
 #     language: python
 #     name: conda-env-microbe-py
 # ---
@@ -23,7 +23,7 @@
 import os
 import matplotlib.pyplot as plt
 import pandas as pd
-from ponyo import utils, train_vae_modules
+from cm_modules import utils, train_vae_modules
 
 # Set seeds to get reproducible VAE trained models
 train_vae_modules.set_all_seeds()
