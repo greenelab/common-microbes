@@ -10,7 +10,7 @@ from keras import metrics
 from keras.layers import Layer
 from keras import backend as K
 import tensorflow as tf
-
+import numpy as np
 
 # Force TensorFlow to use single thread.
 # Multiple threads are a potential source of
@@ -78,11 +78,52 @@ class CustomVariationalLayer(Layer):
     def reconstruction_loss(self, x_input, x_decoded):
         return self.original_dim * metrics.binary_crossentropy(x_input, x_decoded)
 
-    def vae_loss(self, x_input, x_decoded):
-        reconstruction_loss = self.reconstruction_loss(x_input, x_decoded)
-        kl_loss = self.kl_loss()
+    # From https://github.com/theislab/dca/blob/8210adf66acb7a55da6fcbb1915d40a188a5420f/dca/loss.py
+    def _nan2inf(self, x):
+        return tf.where(tf.math.is_nan(x), tf.zeros_like(x) + np.inf, x)
 
-        return K.mean(reconstruction_loss + (K.get_value(self.beta) * kl_loss))
+    # This function is scrapped from Georgia Doing's repository ???
+    # https://github.com/georgiadoing/seqADAGE/blob/master/Py/run_count_autoencoder.py ????
+    # This code is based on publication: https://www.nature.com/articles/s41467-018-07931-2
+    # https://github.com/theislab/dca/blob/master/dca/loss.py
+    # From https://github.com/theislab/dca/blob/8210adf66acb7a55da6fcbb1915d40a188a5420f/dca/loss.py#L116
+    def zinb_loss(self, pi, y_true, y_pred, ridge_lambda=0.0):
+        scale_factor = self.scale_factor
+        eps = self.eps
+
+        # reuse existing NB neg.log.lik.
+        # mean is always False here, because everything is calculated
+        # element-wise. we take the mean only in the end
+        nb_case = super().loss(y_true, y_pred, mean=False) - tf.math.log(1.0 - pi + eps)
+
+        y_true = tf.cast(y_true, tf.float32)
+        y_pred = tf.cast(y_pred, tf.float32) * scale_factor
+        theta = tf.minimum(self.theta, 1e6)
+
+        zero_nb = tf.pow(theta / (theta + y_pred + eps), theta)
+        zero_case = -tf.math.log(pi + ((1.0 - pi) * zero_nb) + eps)
+        result = tf.where(tf.less(y_true, 1e-8), zero_case, nb_case)
+        ridge = ridge_lambda * tf.square(pi)
+        result += ridge
+
+        result = tf.reduce_mean(result)
+
+        result = self._nan2inf(result)
+
+        if self.debug:
+            tf.summary.histogram('nb_case', nb_case)
+            tf.summary.histogram('zero_nb', zero_nb)
+            tf.summary.histogram('zero_case', zero_case)
+            tf.summary.histogram('ridge', ridge)
+
+        return result
+
+    def vae_loss(self, pi, y_true, y_pred, ridge_lambda):
+        # reconstruction_loss = self.reconstruction_loss(x_input, x_decoded)
+        kl_loss = self.kl_loss()
+        zinb_loss = self.zinb_loss(pi, y_true, y_pred, ridge_lambda)
+
+        return K.mean(zinb_loss + (K.get_value(self.beta) * kl_loss))
 
     def call(self, inputs):
         x = inputs[0]

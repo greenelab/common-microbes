@@ -24,31 +24,28 @@ from cm_modules.helper_vae import sampling_maker, CustomVariationalLayer, WarmUp
 # https://github.com/georgiadoing/seqADAGE/blob/master/Py/run_count_autoencoder.py
 # This code is based on publication: https://www.nature.com/articles/s41467-018-07931-2
 # https://github.com/theislab/dca/blob/master/dca/loss.py
-def _nan2inf(x):
-    return tf.where(tf.math.is_nan(x), tf.zeros_like(x) + np.inf, x)
+# def _nan2inf(x):
+#    return tf.where(tf.math.is_nan(x), tf.zeros_like(x) + np.inf, x)
+# def zinbl2(y_true, y_pred):
+#    y_true = tf.cast(y_true, tf.float32)
+#    y_pred = tf.cast(y_pred, tf.float32)
+#    eps = 1e-10
+#    theta = 1e6
+# pi = y_pred / y_pred + math.exp
+# pi = 0.5
+# ridge_lambda = 0
+# t1 = tf.math.lgamma(1e6 + 1e-10) + tf.math.lgamma(y_true + 1.0) - tf.math.lgamma(y_true + 1e6 + 1e-10)
+# t2 = (1e6 + y_true) * tf.math.log(1.0 + (y_pred / (1e6 + 1e-10))) + (y_true * (tf.math.log(1e6 + 1e-10) - tf.math.log(y_pred + 1e-10)))
 
+# nb_case = t1 + t2 - tf.math.log(1.0 - pi + eps)
+# zero_nb = tf.pow(theta / (theta + y_pred + eps), theta)
+# zero_case = -tf.math.log(pi + ((1.0 - pi) * zero_nb) + eps)
+# result = tf.where(tf.less(y_true, 1e-8), zero_case, nb_case)
+# ridge = ridge_lambda * tf.square(pi)
+# result += ridge
 
-def zinbl2(y_true, y_pred):
-    y_true = tf.cast(y_true, tf.float32)
-    y_pred = tf.cast(y_pred, tf.float32)
-    eps = 1e-10
-    theta = 1e6
-
-    # pi = y_pred / y_pred + math.exp
-    pi = 0.5
-    ridge_lambda = 0
-    t1 = tf.math.lgamma(1e6 + 1e-10) + tf.math.lgamma(y_true + 1.0) - tf.math.lgamma(y_true + 1e6 + 1e-10)
-    t2 = (1e6 + y_true) * tf.math.log(1.0 + (y_pred / (1e6 + 1e-10))) + (y_true * (tf.math.log(1e6 + 1e-10) - tf.math.log(y_pred + 1e-10)))
-
-    nb_case = t1 + t2 - tf.math.log(1.0 - pi + eps)
-    zero_nb = tf.pow(theta / (theta + y_pred + eps), theta)
-    zero_case = -tf.math.log(pi + ((1.0 - pi) * zero_nb) + eps)
-    result = tf.where(tf.less(y_true, 1e-8), zero_case, nb_case)
-    ridge = ridge_lambda * tf.square(pi)
-    result += ridge
-
-    final = tf.reduce_mean(result)
-    return _nan2inf(final)
+# final = tf.reduce_mean(result)
+# return _nan2inf(final)
 
 
 def run_tybalt_training(
@@ -221,12 +218,12 @@ def run_tybalt_training(
     adam = optimizers.Adam(lr=learning_rate)
     vae_layer = CustomVariationalLayer(
         original_dim, z_log_var_encoded, z_mean_encoded, beta
-    )([expression_input, expression_reconstruct])
+    )([0.5, expression_input, expression_reconstruct, 0.0])
     vae = Model(expression_input, vae_layer)
 
     # UPDATE LOSS HERE
-    # vae.compile(optimizer=adam, loss=None, loss_weights=[beta])
-    vae.compile(optimizer=adam, loss=zinbl2)
+    vae.compile(optimizer=adam, loss=None, loss_weights=[beta])
+    # vae.compile(optimizer=adam, loss=zinbl2)
 
     # Training
 
