@@ -78,7 +78,7 @@ train_vae_modules.train_vae(config_filename, normalized_compendium_filename)
 
 # +
 # Plot training and validation loss separately
-stat_logs_filename = "logs/NN_2500_30/tybalt_2layer_30latent_stats.tsv"
+stat_logs_filename = "logs/DCA/tybalt_2layer_30latent_stats.tsv"
 
 stats = pd.read_csv(stat_logs_filename, sep="\t", index_col=None, header=0)
 # -

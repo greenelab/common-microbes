@@ -87,18 +87,43 @@ class CustomVariationalLayer(Layer):
     # This code is based on publication: https://www.nature.com/articles/s41467-018-07931-2
     # https://github.com/theislab/dca/blob/master/dca/loss.py
     # From https://github.com/theislab/dca/blob/8210adf66acb7a55da6fcbb1915d40a188a5420f/dca/loss.py#L116
-    def zinb_loss(self, pi, y_true, y_pred, ridge_lambda=0.0):
-        scale_factor = self.scale_factor
-        eps = self.eps
+    def zinb_loss(self, y_true, y_pred):
+        # pi is???
+        pi = 0.5
+        # ridge_lambda is ???
+        ridge_lambda = 0.0
+        # scale_factor scales the nbinom mean before the
+        # calculation of the loss to balance the
+        # learning rates of theta and network weights
+        # So what does high value mean???
+        scale_factor = 1.0
+        # eps is???
+        # Scale for eps???
+        eps = 1e-10
+        # theta is ???
+        # minimum of theta is 1e6
+        theta = 1e10
+
+        # Commenting these out and hard coding variables in for now
+        # scale_factor = self.scale_factor
+        # eps = self.eps
 
         # reuse existing NB neg.log.lik.
         # mean is always False here, because everything is calculated
         # element-wise. we take the mean only in the end
-        nb_case = super().loss(y_true, y_pred, mean=False) - tf.math.log(1.0 - pi + eps)
+
+        # Replace `super().loss(y_true, y_pred)` with code directly from loss()
+        # https://github.com/theislab/dca/blob/8210adf66acb7a55da6fcbb1915d40a188a5420f/dca/loss.py#L72
+        # Getting an error that 'super hase no attribute loss'
+        # nb_case = super().loss(y_true, y_pred, mean=False) - tf.math.log(1.0 - pi + eps)
+
+        t1 = tf.math.lgamma(theta + eps) + tf.math.lgamma(y_true + 1.0) - tf.math.lgamma(y_true + theta + eps)
+        t2 = (theta + y_true) * tf.math.log(1.0 + (y_pred / (theta + eps))) + (y_true * (tf.math.log(theta + eps) - tf.math.log(y_pred + eps)))
+        nb_case = t1 + t2 - tf.math.log(1.0 - pi + eps)
 
         y_true = tf.cast(y_true, tf.float32)
         y_pred = tf.cast(y_pred, tf.float32) * scale_factor
-        theta = tf.minimum(self.theta, 1e6)
+        # theta = tf.minimum(self.theta, 1e6)
 
         zero_nb = tf.pow(theta / (theta + y_pred + eps), theta)
         zero_case = -tf.math.log(pi + ((1.0 - pi) * zero_nb) + eps)
@@ -110,18 +135,18 @@ class CustomVariationalLayer(Layer):
 
         result = self._nan2inf(result)
 
-        if self.debug:
-            tf.summary.histogram('nb_case', nb_case)
-            tf.summary.histogram('zero_nb', zero_nb)
-            tf.summary.histogram('zero_case', zero_case)
-            tf.summary.histogram('ridge', ridge)
+        # if self.debug:
+        #    tf.summary.histogram('nb_case', nb_case)
+        #    tf.summary.histogram('zero_nb', zero_nb)
+        #    tf.summary.histogram('zero_case', zero_case)
+        #    tf.summary.histogram('ridge', ridge)
 
         return result
 
-    def vae_loss(self, pi, y_true, y_pred, ridge_lambda):
+    def vae_loss(self, y_true, y_pred):
         # reconstruction_loss = self.reconstruction_loss(x_input, x_decoded)
         kl_loss = self.kl_loss()
-        zinb_loss = self.zinb_loss(pi, y_true, y_pred, ridge_lambda)
+        zinb_loss = self.zinb_loss(y_true, y_pred)
 
         return K.mean(zinb_loss + (K.get_value(self.beta) * kl_loss))
 
@@ -133,8 +158,8 @@ class CustomVariationalLayer(Layer):
 
         kl_loss = self.kl_loss()
         self.add_metric(kl_loss, name="kl_loss")
-        reconstruction_loss = self.reconstruction_loss(x, x_decoded)
-        self.add_metric(reconstruction_loss, name="recons_loss")
+        zinb_loss = self.zinb_loss(x, x_decoded)
+        self.add_metric(zinb_loss, name="zinb_loss")
         # We won't actually use the output.
         return x
 

@@ -218,7 +218,7 @@ def run_tybalt_training(
     adam = optimizers.Adam(lr=learning_rate)
     vae_layer = CustomVariationalLayer(
         original_dim, z_log_var_encoded, z_mean_encoded, beta
-    )([0.5, expression_input, expression_reconstruct, 0.0])
+    )([expression_input, expression_reconstruct])
     vae = Model(expression_input, vae_layer)
 
     # UPDATE LOSS HERE
