@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # ---
 # jupyter:
 #   jupytext:
@@ -15,7 +16,13 @@
 
 # # Train VAE model
 #
-# This notebook will first try to train the current VAE model before modifying the loss function to work with count data
+# This notebook will first try to train the current VAE model before modifying the loss function to work with count data. Specifically, the loss function uses the loss from defined in [Eraslan et al.](https://www.nature.com/articles/s41467-018-07931-2). This publication uses the zero-inflated negative binomial (ZINB) distribution, which models highly sparse and overdispersed count data. ZINB is a mixture model that is composed of
+#    1. A point mass at 0 to represent the excess of 0's
+#    2. A NB distribution to represent the count distribution
+#
+# Params of ZINB conditioned on the input data are estimated. These params include the mean and dispersion parameters of the NB component (μ and θ) and the mixture coefficient that represents the weight of the point mass (π)
+#
+# We adopted code from: https://github.com/theislab/dca/blob/master/dca/loss.py
 
 # %load_ext autoreload
 # %autoreload 2

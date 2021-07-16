@@ -82,15 +82,28 @@ class CustomVariationalLayer(Layer):
     def _nan2inf(self, x):
         return tf.where(tf.math.is_nan(x), tf.zeros_like(x) + np.inf, x)
 
-    # This function is scrapped from Georgia Doing's repository ???
-    # https://github.com/georgiadoing/seqADAGE/blob/master/Py/run_count_autoencoder.py ????
     # This code is based on publication: https://www.nature.com/articles/s41467-018-07931-2
     # https://github.com/theislab/dca/blob/master/dca/loss.py
     # From https://github.com/theislab/dca/blob/8210adf66acb7a55da6fcbb1915d40a188a5420f/dca/loss.py#L116
+
+    # The zero-inflated negative binomial (ZINB) distribution models highly sparse
+    # and overdispersed count data
+
+    # ZINB is a mixture model that is composed of
+    # 1. A point mass at 0 to represent the excess of 0's
+    # 2. A NB distribution to represent the count distribution
+
+    # Params of ZINB conditioned on the input data are estimated
+    # Params include the mean and dispersion parameters of the NB component
+    # (μ and θ) and the mixture coefficient that represents the weight of
+    # the point mass (π)
+    # These params should be updated by the network
+
     def zinb_loss(self, y_true, y_pred):
-        # pi is???
-        pi = 0.5
-        # ridge_lambda is ???
+        # pi is the probability that the count is 0
+        pi = 0.9
+        # ridge_lambda is the strength of the L1/L2 regularization
+        # what does this mean???
         ridge_lambda = 0.0
         # scale_factor scales the nbinom mean before the
         # calculation of the loss to balance the
@@ -100,7 +113,7 @@ class CustomVariationalLayer(Layer):
         # eps is???
         # Scale for eps???
         eps = 1e-10
-        # theta is ???
+        # theta is the dispersion of the NB distribution
         # minimum of theta is 1e6
         theta = 1e10
 

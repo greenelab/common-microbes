@@ -20,6 +20,13 @@ from keras import optimizers
 from cm_modules.helper_vae import sampling_maker, CustomVariationalLayer, WarmUpCallback
 
 
+def MeanAct(x):
+    return tf.clip_by_value(K.exp(x), 1e-5, 1e6)
+
+
+def DispAct(x):
+    return tf.clip_by_value(tf.nn.softplus(x), 1e-4, 1e4)
+
 # This function is scrapped from Georgia Doing's repository:
 # https://github.com/georgiadoing/seqADAGE/blob/master/Py/run_count_autoencoder.py
 # This code is based on publication: https://www.nature.com/articles/s41467-018-07931-2
@@ -208,10 +215,41 @@ def run_tybalt_training(
     # The decoding layer is much simpler with a single layer glorot uniform
     # initialized and sigmoid activation
     # Reconstruct P(X|z)
-    decoder = Sequential()
-    decoder.add(Dense(intermediate_dim, activation="relu", input_dim=latent_dim))
-    decoder.add(Dense(original_dim, activation="sigmoid"))
-    expression_reconstruct = decoder(z)
+    # decoder = Sequential()
+    # decoder.add(Dense(intermediate_dim, activation="relu", input_dim=latent_dim))
+    # decoder.add(Dense(original_dim, activation="sigmoid"))
+    # expression_reconstruct = decoder(z)
+    # print(type(decoder))
+    # print(type(decoder.layers[0]))
+
+    # TESTING
+    # https://github.com/theislab/dca/blob/8210adf66acb7a55da6fcbb1915d40a188a5420f/dca/network.py#L366
+    # https://github.com/theislab/dca/blob/8210adf66acb7a55da6fcbb1915d40a188a5420f/dca/loss.py#L116
+    # https://github.com/theislab/dca/blob/8210adf66acb7a55da6fcbb1915d40a188a5420f/dca/layers.py#L31
+    #
+    output_tensor_1 = Dense(intermediate_dim, activation="relu", input_dim=latent_dim)(z)
+    output_tensor_2 = Dense(original_dim, activation="sigmoid")(output_tensor_1)
+    expression_reconstruct = output_tensor_2
+
+    # pi
+    pi = Dense(original_dim, activation="sigmoid")(output_tensor_1)
+    print(pi)
+
+    # disp
+    disp = Dense(original_dim, activation=DispAct)(output_tensor_1)
+    print(disp)
+
+    # disp
+    mean = Dense(original_dim, activation=MeanAct)(output_tensor_1)
+    print(mean)
+    # TO DO
+    # Check that outputs are updated
+    # Create Model with multiple outputs
+
+    # Add 3 branches from this last-1 layer and pass into loss
+    # Figure out what other params need to be
+    # pi, disp, mean are the encoder applied to the last-1 layer using different activation functions
+    # This will be updated in the loss
 
     # CONNECTIONS
     # fully-connected network
@@ -241,7 +279,8 @@ def run_tybalt_training(
     # Use trained model to make predictions
     encoder = Model(expression_input, z_mean_encoded)
 
-    return encoder, decoder, hist
+    # return encoder, decoder, hist
+    return encoder, output_tensor_2, hist
 
 
 def tybalt_2layer_model(
