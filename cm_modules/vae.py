@@ -15,9 +15,9 @@ import os
 from keras import backend as K
 from keras.layers import Input, Dense, Lambda, Activation
 from keras.layers.normalization import BatchNormalization
-from keras.models import Model, Sequential
+from keras.models import Model
 from keras import optimizers
-from cm_modules.helper_vae import sampling_maker, CustomVariationalLayer, WarmUpCallback
+from cm_modules.helper_vae import sampling_maker, CustomVariationalLayer, WarmUpCallback, SliceLayer, ColwiseMultLayer
 
 
 def MeanAct(x):
@@ -26,33 +26,6 @@ def MeanAct(x):
 
 def DispAct(x):
     return tf.clip_by_value(tf.nn.softplus(x), 1e-4, 1e4)
-
-# This function is scrapped from Georgia Doing's repository:
-# https://github.com/georgiadoing/seqADAGE/blob/master/Py/run_count_autoencoder.py
-# This code is based on publication: https://www.nature.com/articles/s41467-018-07931-2
-# https://github.com/theislab/dca/blob/master/dca/loss.py
-# def _nan2inf(x):
-#    return tf.where(tf.math.is_nan(x), tf.zeros_like(x) + np.inf, x)
-# def zinbl2(y_true, y_pred):
-#    y_true = tf.cast(y_true, tf.float32)
-#    y_pred = tf.cast(y_pred, tf.float32)
-#    eps = 1e-10
-#    theta = 1e6
-# pi = y_pred / y_pred + math.exp
-# pi = 0.5
-# ridge_lambda = 0
-# t1 = tf.math.lgamma(1e6 + 1e-10) + tf.math.lgamma(y_true + 1.0) - tf.math.lgamma(y_true + 1e6 + 1e-10)
-# t2 = (1e6 + y_true) * tf.math.log(1.0 + (y_pred / (1e6 + 1e-10))) + (y_true * (tf.math.log(1e6 + 1e-10) - tf.math.log(y_pred + 1e-10)))
-
-# nb_case = t1 + t2 - tf.math.log(1.0 - pi + eps)
-# zero_nb = tf.pow(theta / (theta + y_pred + eps), theta)
-# zero_case = -tf.math.log(pi + ((1.0 - pi) * zero_nb) + eps)
-# result = tf.where(tf.less(y_true, 1e-8), zero_case, nb_case)
-# ridge = ridge_lambda * tf.square(pi)
-# result += ridge
-
-# final = tf.reduce_mean(result)
-# return _nan2inf(final)
 
 
 def run_tybalt_training(
@@ -215,14 +188,8 @@ def run_tybalt_training(
     # The decoding layer is much simpler with a single layer glorot uniform
     # initialized and sigmoid activation
     # Reconstruct P(X|z)
-    # decoder = Sequential()
-    # decoder.add(Dense(intermediate_dim, activation="relu", input_dim=latent_dim))
-    # decoder.add(Dense(original_dim, activation="sigmoid"))
-    # expression_reconstruct = decoder(z)
-    # print(type(decoder))
-    # print(type(decoder.layers[0]))
 
-    # TESTING
+    # TESTING----------------------------
     # https://github.com/theislab/dca/blob/8210adf66acb7a55da6fcbb1915d40a188a5420f/dca/network.py#L366
     # https://github.com/theislab/dca/blob/8210adf66acb7a55da6fcbb1915d40a188a5420f/dca/loss.py#L116
     # https://github.com/theislab/dca/blob/8210adf66acb7a55da6fcbb1915d40a188a5420f/dca/layers.py#L31
@@ -230,6 +197,15 @@ def run_tybalt_training(
     output_tensor_1 = Dense(intermediate_dim, activation="relu", input_dim=latent_dim)(z)
     output_tensor_2 = Dense(original_dim, activation="sigmoid")(output_tensor_1)
     expression_reconstruct = output_tensor_2
+
+    # Params of ZINB conditioned on the input data are estimated
+    # Params include the mean and dispersion parameters of the NB component
+    # (μ and θ) and the mixture coefficient that represents the weight of
+    # the point mass (π)
+    # These params should be updated by the network.
+    # pi, disp, mean are the encoder applied to the (last-1) layer using different activation functions
+    # Add 3 branches from this last-1 layer
+    # These will be updated in the loss
 
     # pi
     pi = Dense(original_dim, activation="sigmoid")(output_tensor_1)
@@ -242,26 +218,28 @@ def run_tybalt_training(
     # disp
     mean = Dense(original_dim, activation=MeanAct)(output_tensor_1)
     print(mean)
+
+    output = ColwiseMultLayer([mean, expression_input])
+    # output = SliceLayer(0, name='slice')([output, disp, pi])
     # TO DO
     # Check that outputs are updated
     # Create Model with multiple outputs
-
-    # Add 3 branches from this last-1 layer and pass into loss
-    # Figure out what other params need to be
-    # pi, disp, mean are the encoder applied to the last-1 layer using different activation functions
-    # This will be updated in the loss
 
     # CONNECTIONS
     # fully-connected network
     adam = optimizers.Adam(lr=learning_rate)
     vae_layer = CustomVariationalLayer(
         original_dim, z_log_var_encoded, z_mean_encoded, beta
-    )([expression_input, expression_reconstruct])
-    vae = Model(expression_input, vae_layer)
+    )([expression_input, expression_reconstruct, pi, disp, tf.cast(0.0, tf.float32)])
+
+    output = SliceLayer(0, name='slice')([output, disp, pi, vae_layer])
+    # vae = Model(expression_input, vae_layer)
+    vae = Model(inputs=expression_input, outputs=output)
 
     # UPDATE LOSS HERE
     vae.compile(optimizer=adam, loss=None, loss_weights=[beta])
-    # vae.compile(optimizer=adam, loss=zinbl2)
+
+    # TESTING -------------------------------------------
 
     # Training
 

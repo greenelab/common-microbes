@@ -6,8 +6,8 @@ Helper functions for running variational autoencoder `vae.py`.
 """
 
 from keras.callbacks import Callback
-from keras import metrics
-from keras.layers import Layer
+# from keras import metrics
+from keras.layers import Layer, Lambda
 from keras import backend as K
 import tensorflow as tf
 import numpy as np
@@ -51,6 +51,28 @@ def sampling_maker(epsilon_std):
     return sampling
 
 
+class SliceLayer(Layer):
+    def __init__(self, index, **kwargs):
+        self.index = index
+        super().__init__(**kwargs)
+
+    def build(self, input_shape):
+        if not isinstance(input_shape, list):
+            raise ValueError('Input should be a list')
+
+        super().build(input_shape)
+
+    def call(self, x):
+        assert isinstance(x, list), 'SliceLayer input is not a list'
+        return x[self.index]
+
+    def compute_output_shape(self, input_shape):
+        return input_shape[self.index]
+
+
+ColwiseMultLayer = Lambda(lambda l: l[0] * tf.reshape(l[1], (-1, 1)))
+
+
 class CustomVariationalLayer(Layer):
     """
     Define a custom layer that learns and performs the training
@@ -75,8 +97,8 @@ class CustomVariationalLayer(Layer):
             axis=-1,
         )
 
-    def reconstruction_loss(self, x_input, x_decoded):
-        return self.original_dim * metrics.binary_crossentropy(x_input, x_decoded)
+    # def reconstruction_loss(self, x_input, x_decoded):
+    #     return self.original_dim * metrics.binary_crossentropy(x_input, x_decoded)
 
     # From https://github.com/theislab/dca/blob/8210adf66acb7a55da6fcbb1915d40a188a5420f/dca/loss.py
     def _nan2inf(self, x):
@@ -99,12 +121,12 @@ class CustomVariationalLayer(Layer):
     # the point mass (π)
     # These params should be updated by the network
 
-    def zinb_loss(self, y_true, y_pred):
+    def zinb_loss(self, y_true, y_pred, pi, theta, ridge_lambda=0.0):
         # pi is the probability that the count is 0
-        pi = 0.9
+        # pi = 0.9
         # ridge_lambda is the strength of the L1/L2 regularization
         # what does this mean???
-        ridge_lambda = 0.0
+        # ridge_lambda = 0.0
         # scale_factor scales the nbinom mean before the
         # calculation of the loss to balance the
         # learning rates of theta and network weights
@@ -115,7 +137,7 @@ class CustomVariationalLayer(Layer):
         eps = 1e-10
         # theta is the dispersion of the NB distribution
         # minimum of theta is 1e6
-        theta = 1e10
+        # theta = 1e10
 
         # Commenting these out and hard coding variables in for now
         # scale_factor = self.scale_factor
@@ -156,22 +178,25 @@ class CustomVariationalLayer(Layer):
 
         return result
 
-    def vae_loss(self, y_true, y_pred):
+    def vae_loss(self, y_true, y_pred, pi, theta, ridge_lambda):
         # reconstruction_loss = self.reconstruction_loss(x_input, x_decoded)
         kl_loss = self.kl_loss()
-        zinb_loss = self.zinb_loss(y_true, y_pred)
+        zinb_loss = self.zinb_loss(y_true, y_pred, pi, theta, ridge_lambda)
 
         return K.mean(zinb_loss + (K.get_value(self.beta) * kl_loss))
 
     def call(self, inputs):
         x = inputs[0]
         x_decoded = inputs[1]
-        loss = self.vae_loss(x, x_decoded)
+        pi = inputs[2]
+        theta = inputs[3]
+        ridge_lambda = inputs[4]
+        loss = self.vae_loss(x, x_decoded, pi, theta, ridge_lambda)
         self.add_loss(loss, inputs=inputs)
 
         kl_loss = self.kl_loss()
         self.add_metric(kl_loss, name="kl_loss")
-        zinb_loss = self.zinb_loss(x, x_decoded)
+        zinb_loss = self.zinb_loss(x, x_decoded, pi, theta, ridge_lambda)
         self.add_metric(zinb_loss, name="zinb_loss")
         # We won't actually use the output.
         return x
