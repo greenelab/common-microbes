@@ -105,8 +105,7 @@ class CustomVariationalLayer(Layer):
         return tf.where(tf.math.is_nan(x), tf.zeros_like(x) + np.inf, x)
 
     # This code is based on publication: https://www.nature.com/articles/s41467-018-07931-2
-    # https://github.com/theislab/dca/blob/master/dca/loss.py
-    # From https://github.com/theislab/dca/blob/8210adf66acb7a55da6fcbb1915d40a188a5420f/dca/loss.py#L116
+    # Code: https://github.com/theislab/dca/blob/master/dca/loss.py
 
     # The zero-inflated negative binomial (ZINB) distribution models highly sparse
     # and overdispersed count data
@@ -180,10 +179,10 @@ class CustomVariationalLayer(Layer):
 
     def vae_loss(self, y_true, y_pred, pi, theta, ridge_lambda):
         # reconstruction_loss = self.reconstruction_loss(x_input, x_decoded)
-        kl_loss = self.kl_loss()
+        # kl_loss = self.kl_loss()
         zinb_loss = self.zinb_loss(y_true, y_pred, pi, theta, ridge_lambda)
-
-        return K.mean(zinb_loss + (K.get_value(self.beta) * kl_loss))
+        return zinb_loss
+        # return K.mean(zinb_loss + (K.get_value(self.beta) * kl_loss))
 
     def call(self, inputs):
         x = inputs[0]
@@ -194,8 +193,8 @@ class CustomVariationalLayer(Layer):
         loss = self.vae_loss(x, x_decoded, pi, theta, ridge_lambda)
         self.add_loss(loss, inputs=inputs)
 
-        kl_loss = self.kl_loss()
-        self.add_metric(kl_loss, name="kl_loss")
+        # kl_loss = self.kl_loss()
+        # self.add_metric(kl_loss, name="kl_loss")
         zinb_loss = self.zinb_loss(x, x_decoded, pi, theta, ridge_lambda)
         self.add_metric(zinb_loss, name="zinb_loss")
         # We won't actually use the output.

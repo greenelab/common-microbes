@@ -28,6 +28,9 @@ def DispAct(x):
     return tf.clip_by_value(tf.nn.softplus(x), 1e-4, 1e4)
 
 
+# Update VAE model to use count based loss to account for the sparsity in the data
+# This new model is based on Deep Count Autoencoder: https://www.nature.com/articles/s41467-018-07931-2
+# More details: https://docs.google.com/presentation/d/1Q_0BUbfg51OicxY4MdI0IwhdhFfJmzX0f8VyuyGNXrw/edit#slide=id.ge45eb3c133_0_56
 def run_tybalt_training(
     expression_data,
     learning_rate,
@@ -196,7 +199,7 @@ def run_tybalt_training(
     #
     output_tensor_1 = Dense(intermediate_dim, activation="relu", input_dim=latent_dim)(z)
     output_tensor_2 = Dense(original_dim, activation="sigmoid")(output_tensor_1)
-    expression_reconstruct = output_tensor_2
+    # expression_reconstruct = output_tensor_2
 
     # Params of ZINB conditioned on the input data are estimated
     # Params include the mean and dispersion parameters of the NB component
@@ -220,23 +223,22 @@ def run_tybalt_training(
     print(mean)
 
     output = ColwiseMultLayer([mean, expression_input])
-    # output = SliceLayer(0, name='slice')([output, disp, pi])
-    # TO DO
-    # Check that outputs are updated
-    # Create Model with multiple outputs
+    output = SliceLayer(0, name='slice')([output, disp, pi])
 
     # CONNECTIONS
     # fully-connected network
     adam = optimizers.Adam(lr=learning_rate)
-    vae_layer = CustomVariationalLayer(
-        original_dim, z_log_var_encoded, z_mean_encoded, beta
-    )([expression_input, expression_reconstruct, pi, disp, tf.cast(0.0, tf.float32)])
+    # vae_layer = CustomVariationalLayer(
+    #     original_dim, z_log_var_encoded, z_mean_encoded, beta
+    # )([expression_input, expression_reconstruct, pi, disp, tf.cast(0.0, tf.float32)])
 
-    output = SliceLayer(0, name='slice')([output, disp, pi, vae_layer])
+    # output = SliceLayer(0, name='slice')([output, disp, pi, vae_layer])
     # vae = Model(expression_input, vae_layer)
     vae = Model(inputs=expression_input, outputs=output)
 
     # UPDATE LOSS HERE
+    # TO DO
+    # Check that outputs are updated
     vae.compile(optimizer=adam, loss=None, loss_weights=[beta])
 
     # TESTING -------------------------------------------

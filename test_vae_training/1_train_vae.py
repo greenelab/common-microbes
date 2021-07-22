@@ -9,9 +9,9 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:microbe]
+#     display_name: Python [conda env:common_microbe] *
 #     language: python
-#     name: conda-env-microbe-py
+#     name: conda-env-common_microbe-py
 # ---
 
 # # Train VAE model
@@ -23,6 +23,8 @@
 # Params of ZINB conditioned on the input data are estimated. These params include the mean and dispersion parameters of the NB component (μ and θ) and the mixture coefficient that represents the weight of the point mass (π)
 #
 # We adopted code from: https://github.com/theislab/dca/blob/master/dca/loss.py
+#
+# More details about the new model can be found: https://docs.google.com/presentation/d/1Q_0BUbfg51OicxY4MdI0IwhdhFfJmzX0f8VyuyGNXrw/edit#slide=id.ge45eb3c133_0_56
 
 # %load_ext autoreload
 # %autoreload 2
@@ -30,7 +32,7 @@
 import os
 import matplotlib.pyplot as plt
 import pandas as pd
-from cm_modules import utils, train_vae_modules
+from cm_modules import paths, utils, train_vae_modules
 
 # Set seeds to get reproducible VAE trained models
 train_vae_modules.set_all_seeds()
@@ -51,12 +53,26 @@ raw_compendium_filename = params["raw_compendium_filename"]
 normalized_compendium_filename = params["normalized_compendium_filename"]
 # -
 
+raw_compendium = pd.read_csv(raw_compendium_filename, sep="\t", index_col=0, header=0)
+
+print(raw_compendium.shape)
+raw_compendium.head()
+
+raw_compendium.T.to_csv(
+    os.path.join(paths.LOCAL_DATA_DIR, "raw_microbiome_transposed.tsv"), sep="\t"
+)
+
+# +
+# TO DO:
+# In the DCA paper, they log2 transformed and z-score normalized their data
+
 # Try normalzing the data
 # Here we are normalizing the microbiome count data per taxon
 # so that each taxon is in the range 0-1
 train_vae_modules.normalize_expression_data(
     base_dir, config_filename, raw_compendium_filename, normalized_compendium_filename
 )
+# -
 
 test1 = pd.read_csv(raw_compendium_filename, sep="\t")
 test2 = pd.read_csv(normalized_compendium_filename, sep="\t")
