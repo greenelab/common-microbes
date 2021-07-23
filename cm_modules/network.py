@@ -15,23 +15,19 @@
 
 import os
 import pickle
-from abc import ABCMeta, abstractmethod
 
 import numpy as np
-import scanpy as sc
 
 import keras
-from keras.layers import Input, Dense, Dropout, Activation, BatchNormalization, Lambda
+from keras.layers import Input, Dense, Dropout, Activation, BatchNormalization
 from keras.models import Model
 from keras.regularizers import l1_l2
 from keras.objectives import mean_squared_error
-from keras.initializers import Constant
 from keras import backend as K
 
 import tensorflow as tf
 
-from .loss import poisson_loss, NB, ZINB
-from .layers import ConstantDispersionLayer, SliceLayer, ColwiseMultLayer, ElementwiseDense
+from .layers import SliceLayer, ColwiseMultLayer
 from .io import write_text_matrix
 
 
@@ -298,3 +294,7 @@ class ZINBAutoencoder(Autoencoder):
             write_text_matrix(adata.obsm['X_dca_dropout'],
                               os.path.join(file_path, 'dropout.tsv'),
                               colnames=colnames, transpose=True)
+
+
+AE_types = {'normal': Autoencoder, 'zinb-conddisp': ZINBAutoencoder,
+            }

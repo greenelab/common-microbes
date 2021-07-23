@@ -34,8 +34,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from cm_modules import paths, utils, train_vae_modules
 
+# +
 # Set seeds to get reproducible VAE trained models
-train_vae_modules.set_all_seeds()
+# train_vae_modules.set_all_seeds()
 
 # +
 base_dir = os.path.abspath(os.path.join(os.getcwd(), "../"))
@@ -72,14 +73,16 @@ raw_compendium.T.to_csv(
 train_vae_modules.normalize_expression_data(
     base_dir, config_filename, raw_compendium_filename, normalized_compendium_filename
 )
-# -
 
-test1 = pd.read_csv(raw_compendium_filename, sep="\t")
-test2 = pd.read_csv(normalized_compendium_filename, sep="\t")
+# +
+# test1 = pd.read_csv(raw_compendium_filename, sep="\t")
+# test2 = pd.read_csv(normalized_compendium_filename, sep="\t")
 
-test1.head()
+# +
+# test1.head()
 
-test2.head()
+# +
+# test2.head()
 
 # +
 # Create VAE directories if needed
@@ -97,15 +100,16 @@ for each_dir in output_dirs:
 # -
 
 # Train VAE on new compendium data
-train_vae_modules.train_vae(config_filename, normalized_compendium_filename)
+train_vae_modules.train_vae(config_filename, raw_compendium_filename)
 
 # +
 # Plot training and validation loss separately
 stat_logs_filename = "logs/DCA/tybalt_2layer_30latent_stats.tsv"
 
-stats = pd.read_csv(stat_logs_filename, sep="\t", index_col=None, header=0)
-# -
+# stats = pd.read_csv(stat_logs_filename, sep="\t", index_col=None, header=0)
 
-plt.plot(stats["loss"])
+# +
+# plt.plot(stats["loss"])
 
-plt.plot(stats["val_loss"], color="orange")
+# +
+# plt.plot(stats["val_loss"], color="orange")

@@ -8,7 +8,7 @@ Scripts related to training the VAE including
 training in `vae.tybalt_2layer_model`
 """
 
-from cm_modules import vae, utils
+from cm_modules import utils
 import os
 import pickle
 import pandas as pd
@@ -17,6 +17,9 @@ import tensorflow as tf
 import numpy as np
 import random
 import warnings
+from .network import AE_types
+from . import io
+# import scanpy as sc
 
 
 def fxn():
@@ -137,27 +140,65 @@ def train_vae(config_filename, input_data_filename):
     train_architecture = params["NN_architecture"]
     validation_frac = params["validation_frac"]
 
-    # Read data
-    normalized_data = pd.read_csv(input_data_filename, header=0, sep="\t", index_col=0)
+    # set seed for reproducibility
+    random.seed(42)
+    np.random.seed(42)
+    tf.random.set_seed(42)
+    os.environ['PYTHONHASHSEED'] = '0'
 
+    # Format input data
+    # print(isinstance(expression_data, sc.AnnData))
+    # print(isinstance(expression_data, str))
+    adata = io.read_dataset(
+        input_data_filename,
+        transpose=True,  # assume gene x cell by default
+        check_counts=False,
+        test_split=True
+    )
+
+    input_data = pd.read_csv(input_data_filename, header=0, sep="\t", index_col=0)
+    original_dim = input_data.shape[1]
     print(
-        "input dataset contains {} samples and {} genes".format(
-            normalized_data.shape[0], normalized_data.shape[1]
+        "input dataset contains {} rows and {} columns".format(
+            input_data.shape[0], input_data.shape[1]
         )
     )
 
-    # Train (VAE)
-    vae.tybalt_2layer_model(
-        learning_rate,
-        batch_size,
-        epochs,
-        kappa,
-        intermediate_dim,
-        latent_dim,
-        epsilon_std,
-        normalized_data,
-        base_dir,
-        dataset_name,
-        train_architecture,
-        validation_frac,
+    # Define model architecture
+    net = AE_types['zinb-conddisp'](
+        input_size=original_dim,
+        output_size=original_dim,
+        hidden_size=(intermediate_dim, latent_dim, intermediate_dim),
+        l2_coef=0.,
+        l1_coef=0.,
+        l2_enc_coef=0.,
+        l1_enc_coef=0.,
+        ridge=0.,
+        hidden_dropout=0.,
+        input_dropout=0.,
+        batchnorm=True,
+        activation='relu',
+        init='glorot_uniform',
+        file_path=None,
+        debug=True
     )
+    net.save()
+    net.build()
+
+    # Train model using ZINB loss
+    # Expect input that is gene x cell
+    """losses = train(
+        input_data.T,
+        net,
+        output_dir=None,
+        learning_rate=learning_rate,
+        epochs=epochs,
+        early_stop=15,
+        reduce_lr=10,
+        output_subset=None,
+        optimizer='Adam',
+        clip_grad=5.,
+        save_weights=True,
+        tensorboard=False
+        )
+"""
