@@ -33,6 +33,7 @@ import os
 import matplotlib.pyplot as plt
 import pandas as pd
 from cm_modules import paths, utils, train_vae_modules
+import scanpy as sc
 
 # +
 # Set seeds to get reproducible VAE trained models
@@ -73,16 +74,22 @@ raw_compendium.T.to_csv(
 train_vae_modules.normalize_expression_data(
     base_dir, config_filename, raw_compendium_filename, normalized_compendium_filename
 )
+# -
 
-# +
 # test1 = pd.read_csv(raw_compendium_filename, sep="\t")
-# test2 = pd.read_csv(normalized_compendium_filename, sep="\t")
+test2 = pd.read_csv(normalized_compendium_filename, sep="\t")
 
 # +
 # test1.head()
+# -
 
-# +
-# test2.head()
+test2.shape
+
+test2.head()
+
+raw_compendium_filename
+
+sc.read(raw_compendium_filename, first_column_names=True)
 
 # +
 # Create VAE directories if needed

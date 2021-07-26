@@ -56,6 +56,7 @@ def read_dataset(adata, transpose=False, test_split=False, copy=False, check_cou
             adata = adata.copy()
     elif isinstance(adata, str):
         adata = sc.read(adata, first_column_names=True)
+        print("here")
     else:
         raise NotImplementedError
 
@@ -69,9 +70,9 @@ def read_dataset(adata, transpose=False, test_split=False, copy=False, check_cou
             assert np.all(X_subset.astype(int) == X_subset), norm_error
 
     if transpose:
-		adata = adata.transpose()
+        adata = adata.transpose()
 
-	if test_split:
+    if test_split:
         train_idx, test_idx = train_test_split(np.arange(adata.n_obs), test_size=0.1, random_state=42)
         spl = pd.Series(['train'] * adata.n_obs)
         spl.iloc[test_idx] = 'test'

@@ -43,6 +43,7 @@ class NB(object):
     def loss(self, y_true, y_pred, mean=True):
         scale_factor = self.scale_factor
         eps = self.eps
+        print("ytrue", y_true)
 
         with tf.name_scope(self.scope):
             y_true = tf.cast(y_true, tf.float32)
@@ -57,6 +58,13 @@ class NB(object):
 
             t1 = tf.math.lgamma(theta + eps) + tf.math.lgamma(y_true + 1.0) - tf.math.lgamma(y_true + theta + eps)
             t2 = (theta + y_true) * tf.math.log(1.0 + (y_pred / (theta + eps))) + (y_true * (tf.math.log(theta + eps) - tf.math.log(y_pred + eps)))
+
+            print((
+                tf.verify_tensor_all_finite(y_pred, 'y_pred has inf/nans'),
+                tf.verify_tensor_all_finite(t1, 't1 has inf/nans'),
+                tf.verify_tensor_all_finite(t2, 't2 has inf/nans')
+            )
+            )
 
             if self.debug:
                 assert_ops = [
@@ -97,6 +105,10 @@ class ZINB(NB):
             # reuse existing NB neg.log.lik.
             # mean is always False here, because everything is calculated
             # element-wise. we take the mean only in the end
+            print("ytrue", y_true)
+            print("ypred", y_pred)
+            print(tf.math.log(1.0 - self.pi + eps))
+
             nb_case = super().loss(y_true, y_pred, mean=False) - tf.math.log(1.0 - self.pi + eps)
 
             y_true = tf.cast(y_true, tf.float32)

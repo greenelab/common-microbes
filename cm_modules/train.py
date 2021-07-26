@@ -54,7 +54,7 @@ def train(adata, network, output_dir=None, optimizer='RMSprop', learning_rate=No
         optimizer = opt.__dict__[optimizer](clipvalue=clip_grad)
     else:
         optimizer = opt.__dict__[optimizer](lr=learning_rate, clipvalue=clip_grad)
-
+    print(model)
     model.compile(loss=loss, optimizer=optimizer)
 
     # Callbacks
@@ -78,7 +78,7 @@ def train(adata, network, output_dir=None, optimizer='RMSprop', learning_rate=No
         callbacks.append(tb_cb)
 
     if verbose:
-		model.summary()
+        model.summary()
 
     inputs = {'count': adata.X, 'size_factors': adata.obs.size_factors}
 

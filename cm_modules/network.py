@@ -27,6 +27,7 @@ from keras import backend as K
 
 import tensorflow as tf
 
+from .loss import NB, ZINB
 from .layers import SliceLayer, ColwiseMultLayer
 from .io import write_text_matrix
 
@@ -263,6 +264,8 @@ class ZINBAutoencoder(Autoencoder):
         self.extra_models['mean_norm'] = Model(inputs=self.input_layer, outputs=mean)
         self.extra_models['decoded'] = Model(inputs=self.input_layer, outputs=self.decoder_output)
 
+        print("input layer", self.input_layer)
+        print("hidden layer", self.sf_layer)
         self.model = Model(inputs=[self.input_layer, self.sf_layer], outputs=output)
 
         self.encoder = self.get_encoder()
@@ -277,6 +280,8 @@ class ZINBAutoencoder(Autoencoder):
 
         # warning! this may overwrite adata.X
         super().predict(adata, mode, return_info, copy=False)
+        print("copy", copy)
+        print("adata", adata)
         return adata if copy else None
 
     def write(self, adata, file_path, mode='denoise', colnames=None):

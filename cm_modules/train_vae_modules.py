@@ -19,6 +19,7 @@ import random
 import warnings
 from .network import AE_types
 from . import io
+from .train import train
 # import scanpy as sc
 
 
@@ -200,5 +201,4 @@ def train_vae(config_filename, input_data_filename):
         clip_grad=5.,
         save_weights=True,
         tensorboard=False
-        )
-"""
+        )"""
