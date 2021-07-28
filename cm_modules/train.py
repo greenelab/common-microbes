@@ -46,15 +46,19 @@ def train(adata, network, output_dir=None, optimizer='RMSprop', learning_rate=No
         )
     )
     model = network.model
+    print("model", model)
     loss = network.loss
+    print("loss", loss)
+
     if output_dir is not None:
         os.makedirs(output_dir, exist_ok=True)
 
+    print("LR defined", learning_rate)
     if learning_rate is None:
         optimizer = opt.__dict__[optimizer](clipvalue=clip_grad)
     else:
         optimizer = opt.__dict__[optimizer](lr=learning_rate, clipvalue=clip_grad)
-    print(model)
+    print("about to compiile")
     model.compile(loss=loss, optimizer=optimizer)
 
     # Callbacks
@@ -80,13 +84,21 @@ def train(adata, network, output_dir=None, optimizer='RMSprop', learning_rate=No
     if verbose:
         model.summary()
 
+    # The format of the input data is modified to use pandas dataframe instead
+    # of scanpy object because getting the following error:
+    #
     inputs = {'count': adata.X, 'size_factors': adata.obs.size_factors}
+
+    # Make size_factors a vector of ones
+    # size_factors = np.ones(adata.shape[0])
+    # inputs = {'count': adata, 'size_factors': size_factors}
 
     if output_subset:
         gene_idx = [np.where(adata.raw.var_names == x)[0][0] for x in output_subset]
         output = adata.raw.X[:, gene_idx] if use_raw_as_output else adata.X[:, gene_idx]
     else:
         output = adata.raw.X if use_raw_as_output else adata.X
+        # output = np.array(adata.iloc[1:,1:])
 
     loss = model.fit(inputs, output,
                      epochs=epochs,

@@ -34,6 +34,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from cm_modules import paths, utils, train_vae_modules
 import scanpy as sc
+import anndata
 
 # +
 # Set seeds to get reproducible VAE trained models
@@ -77,7 +78,7 @@ train_vae_modules.normalize_expression_data(
 # -
 
 # test1 = pd.read_csv(raw_compendium_filename, sep="\t")
-test2 = pd.read_csv(normalized_compendium_filename, sep="\t")
+test2 = pd.read_csv(normalized_compendium_filename, sep="\t", index_col=0, header=0)
 
 # +
 # test1.head()
@@ -87,9 +88,14 @@ test2.shape
 
 test2.head()
 
-raw_compendium_filename
+# Convert input to anndata object
+test2_anndata = anndata.AnnData(test2)
 
-sc.read(raw_compendium_filename, first_column_names=True)
+# Save
+raw_compendium_anndata_filename = os.path.join(
+    paths.LOCAL_DATA_DIR, "raw_microbiome_transposed_anndata.h5ad"
+)
+test2_anndata.write(raw_compendium_anndata_filename)
 
 # +
 # Create VAE directories if needed
@@ -107,11 +113,11 @@ for each_dir in output_dirs:
 # -
 
 # Train VAE on new compendium data
-train_vae_modules.train_vae(config_filename, raw_compendium_filename)
+train_vae_modules.train_vae(config_filename, raw_compendium_anndata_filename)
 
 # +
 # Plot training and validation loss separately
-stat_logs_filename = "logs/DCA/tybalt_2layer_30latent_stats.tsv"
+# stat_logs_filename = "logs/DCA/tybalt_2layer_30latent_stats.tsv"
 
 # stats = pd.read_csv(stat_logs_filename, sep="\t", index_col=None, header=0)
 

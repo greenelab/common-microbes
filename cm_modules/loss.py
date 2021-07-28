@@ -48,6 +48,8 @@ class NB(object):
         with tf.name_scope(self.scope):
             y_true = tf.cast(y_true, tf.float32)
             y_pred = tf.cast(y_pred, tf.float32) * scale_factor
+            print("ytrue after scope", y_true)
+            print("ypred after scope", y_pred)
 
             if self.masking:
                 nelem = _nelem(y_true)
@@ -59,18 +61,12 @@ class NB(object):
             t1 = tf.math.lgamma(theta + eps) + tf.math.lgamma(y_true + 1.0) - tf.math.lgamma(y_true + theta + eps)
             t2 = (theta + y_true) * tf.math.log(1.0 + (y_pred / (theta + eps))) + (y_true * (tf.math.log(theta + eps) - tf.math.log(y_pred + eps)))
 
-            print((
-                tf.verify_tensor_all_finite(y_pred, 'y_pred has inf/nans'),
-                tf.verify_tensor_all_finite(t1, 't1 has inf/nans'),
-                tf.verify_tensor_all_finite(t2, 't2 has inf/nans')
-            )
-            )
-
             if self.debug:
                 assert_ops = [
-                    tf.verify_tensor_all_finite(y_pred, 'y_pred has inf/nans'),
-                    tf.verify_tensor_all_finite(t1, 't1 has inf/nans'),
-                    tf.verify_tensor_all_finite(t2, 't2 has inf/nans')]
+                    # tf.verify_tensor_all_finite(y_pred, 'y_pred has inf/nans'),
+                    # tf.verify_tensor_all_finite(t1, 't1 has inf/nans'),
+                    # tf.verify_tensor_all_finite(t2, 't2 has inf/nans')
+                    ]
 
                 tf.summary.histogram('t1', t1)
                 tf.summary.histogram('t2', t2)

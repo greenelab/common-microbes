@@ -148,20 +148,30 @@ def train_vae(config_filename, input_data_filename):
     os.environ['PYTHONHASHSEED'] = '0'
 
     # Format input data
-    # print(isinstance(expression_data, sc.AnnData))
-    # print(isinstance(expression_data, str))
     adata = io.read_dataset(
         input_data_filename,
-        transpose=True,  # assume gene x cell by default
+        transpose=False,  # assume gene x cell by default
         check_counts=False,
         test_split=True
     )
+    print("Successfully read in data")
 
-    input_data = pd.read_csv(input_data_filename, header=0, sep="\t", index_col=0)
-    original_dim = input_data.shape[1]
+    # Normalize input data
+    adata = io.normalize(
+        adata,
+        size_factors=True,
+        logtrans_input=True,
+        normalize_input=True)
+
+    print("Normalized input data")
+
+    # Want cell x gene input
+    # Our dataset is sample x microbe so no need to transform
+    # input_data = pd.read_csv(input_data_filename, header=0, sep="\t", index_col=0)
+    original_dim = adata.X.shape[1]
     print(
         "input dataset contains {} rows and {} columns".format(
-            input_data.shape[0], input_data.shape[1]
+            adata.X.shape[0], adata.X.shape[1]
         )
     )
 
@@ -169,7 +179,7 @@ def train_vae(config_filename, input_data_filename):
     net = AE_types['zinb-conddisp'](
         input_size=original_dim,
         output_size=original_dim,
-        hidden_size=(intermediate_dim, latent_dim, intermediate_dim),
+        hidden_size=[intermediate_dim, latent_dim, intermediate_dim],
         l2_coef=0.,
         l1_coef=0.,
         l2_enc_coef=0.,
@@ -185,11 +195,12 @@ def train_vae(config_filename, input_data_filename):
     )
     net.save()
     net.build()
+    print("built network")
 
     # Train model using ZINB loss
     # Expect input that is gene x cell
-    """losses = train(
-        input_data.T,
+    losses = train(
+        adata[adata.obs.dca_split == 'train'],
         net,
         output_dir=None,
         learning_rate=learning_rate,
@@ -197,8 +208,8 @@ def train_vae(config_filename, input_data_filename):
         early_stop=15,
         reduce_lr=10,
         output_subset=None,
-        optimizer='Adam',
+        # optimizer='Adam',
         clip_grad=5.,
         save_weights=True,
         tensorboard=False
-        )"""
+        )

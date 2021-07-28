@@ -266,6 +266,7 @@ class ZINBAutoencoder(Autoencoder):
 
         print("input layer", self.input_layer)
         print("hidden layer", self.sf_layer)
+        print("output", output)
         self.model = Model(inputs=[self.input_layer, self.sf_layer], outputs=output)
 
         self.encoder = self.get_encoder()
