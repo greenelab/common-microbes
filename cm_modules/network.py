@@ -19,8 +19,9 @@ import pickle
 import numpy as np
 
 import keras
-from keras.layers import Input, Dense, Dropout, Activation, BatchNormalization
-from keras.models import Model
+# Use tensorflow keras: https://www.py4u.net/discuss/246074
+from tensorflow.keras.layers import Input, Dense, Dropout, Activation, BatchNormalization
+from tensorflow.keras.models import Model
 from keras.regularizers import l1_l2
 from keras.objectives import mean_squared_error
 from keras import backend as K
@@ -264,9 +265,9 @@ class ZINBAutoencoder(Autoencoder):
         self.extra_models['mean_norm'] = Model(inputs=self.input_layer, outputs=mean)
         self.extra_models['decoded'] = Model(inputs=self.input_layer, outputs=self.decoder_output)
 
-        print("input layer", self.input_layer)
-        print("hidden layer", self.sf_layer)
-        print("output", output)
+        # print("input layer", self.input_layer)
+        # print("hidden layer", self.sf_layer)
+        # print("output", output)
         self.model = Model(inputs=[self.input_layer, self.sf_layer], outputs=output)
 
         self.encoder = self.get_encoder()

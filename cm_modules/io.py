@@ -56,7 +56,6 @@ def read_dataset(adata, transpose=False, test_split=False, copy=False, check_cou
             adata = adata.copy()
     elif isinstance(adata, str):
         adata = sc.read(adata, first_column_names=True)
-        print("here")
     else:
         raise NotImplementedError
 
@@ -100,6 +99,7 @@ def normalize(adata, filter_min_counts=True, size_factors=True, normalize_input=
     if size_factors:
         sc.pp.normalize_per_cell(adata)
         adata.obs['size_factors'] = adata.obs.n_counts / np.median(adata.obs.n_counts)
+        print("size factors", adata.obs['size_factors'])
     else:
         adata.obs['size_factors'] = 1.0
 

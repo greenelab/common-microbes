@@ -29,6 +29,12 @@ import keras.optimizers as opt
 from keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
 from keras import backend as K
 from keras.preprocessing.image import Iterator
+# The below lines were added due to error: Cannot convert keras symbolic input
+# to numpy array
+# Found this stack overflow solution: https://stackoverflow.com/questions/65366442/cannot-convert-a-symbolic-keras-input-output-to-a-numpy-array-typeerror-when-usi
+from tensorflow.python.framework.ops import disable_eager_execution
+
+disable_eager_execution()
 
 
 def train(adata, network, output_dir=None, optimizer='RMSprop', learning_rate=None,
@@ -46,20 +52,23 @@ def train(adata, network, output_dir=None, optimizer='RMSprop', learning_rate=No
         )
     )
     model = network.model
-    print("model", model)
     loss = network.loss
-    print("loss", loss)
 
     if output_dir is not None:
         os.makedirs(output_dir, exist_ok=True)
 
-    print("LR defined", learning_rate)
     if learning_rate is None:
         optimizer = opt.__dict__[optimizer](clipvalue=clip_grad)
     else:
         optimizer = opt.__dict__[optimizer](lr=learning_rate, clipvalue=clip_grad)
     print("about to compiile")
-    model.compile(loss=loss, optimizer=optimizer)
+
+    # Instantiate an optimizer.
+    # if optimizer == "Adam":
+    #     optimizer = tf.keras.optimizers.Adam()
+
+    print("optimizer", optimizer)
+    model.compile(loss=loss, optimizer=optimizer, experimental_run_tf_function=False)
 
     # Callbacks
     callbacks = []
@@ -88,6 +97,7 @@ def train(adata, network, output_dir=None, optimizer='RMSprop', learning_rate=No
     # of scanpy object because getting the following error:
     #
     inputs = {'count': adata.X, 'size_factors': adata.obs.size_factors}
+    print("inputs", inputs)
 
     # Make size_factors a vector of ones
     # size_factors = np.ones(adata.shape[0])
@@ -99,7 +109,7 @@ def train(adata, network, output_dir=None, optimizer='RMSprop', learning_rate=No
     else:
         output = adata.raw.X if use_raw_as_output else adata.X
         # output = np.array(adata.iloc[1:,1:])
-
+    print("output", output)
     loss = model.fit(inputs, output,
                      epochs=epochs,
                      batch_size=batch_size,

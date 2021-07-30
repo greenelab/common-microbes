@@ -155,15 +155,17 @@ def train_vae(config_filename, input_data_filename):
         test_split=True
     )
     print("Successfully read in data")
+    print(adata.X.shape)
 
     # Normalize input data
+    # Samples below min count were removed
     adata = io.normalize(
         adata,
-        size_factors=True,
-        logtrans_input=True,
+        size_factors=False,
         normalize_input=True)
 
     print("Normalized input data")
+    print(adata.X.shape)
 
     # Want cell x gene input
     # Our dataset is sample x microbe so no need to transform
@@ -208,7 +210,7 @@ def train_vae(config_filename, input_data_filename):
         early_stop=15,
         reduce_lr=10,
         output_subset=None,
-        # optimizer='Adam',
+        optimizer='Adam',
         clip_grad=5.,
         save_weights=True,
         tensorboard=False

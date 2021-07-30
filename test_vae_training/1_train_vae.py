@@ -9,7 +9,7 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:common_microbe] *
+#     display_name: Python [conda env:common_microbe]
 #     language: python
 #     name: conda-env-common_microbe-py
 # ---
@@ -114,6 +114,8 @@ for each_dir in output_dirs:
 
 # Train VAE on new compendium data
 train_vae_modules.train_vae(config_filename, raw_compendium_anndata_filename)
+
+(2142 + 238) / 11857
 
 # +
 # Plot training and validation loss separately

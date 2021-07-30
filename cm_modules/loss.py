@@ -43,13 +43,10 @@ class NB(object):
     def loss(self, y_true, y_pred, mean=True):
         scale_factor = self.scale_factor
         eps = self.eps
-        print("ytrue", y_true)
 
         with tf.name_scope(self.scope):
             y_true = tf.cast(y_true, tf.float32)
             y_pred = tf.cast(y_pred, tf.float32) * scale_factor
-            print("ytrue after scope", y_true)
-            print("ypred after scope", y_pred)
 
             if self.masking:
                 nelem = _nelem(y_true)
@@ -101,9 +98,8 @@ class ZINB(NB):
             # reuse existing NB neg.log.lik.
             # mean is always False here, because everything is calculated
             # element-wise. we take the mean only in the end
-            print("ytrue", y_true)
-            print("ypred", y_pred)
-            print(tf.math.log(1.0 - self.pi + eps))
+            # print("ytrue", y_true)
+            # print("ypred", y_pred)
 
             nb_case = super().loss(y_true, y_pred, mean=False) - tf.math.log(1.0 - self.pi + eps)
 
@@ -124,11 +120,11 @@ class ZINB(NB):
                     result = tf.reduce_mean(result)
 
             result = _nan2inf(result)
-
-            if self.debug:
-                tf.summary.histogram('nb_case', nb_case)
-                tf.summary.histogram('zero_nb', zero_nb)
-                tf.summary.histogram('zero_case', zero_case)
-                tf.summary.histogram('ridge', ridge)
+            print("result", result)
+            # if self.debug:
+            #     tf.summary.histogram('nb_case', nb_case)
+            #     tf.summary.histogram('zero_nb', zero_nb)
+            #     tf.summary.histogram('zero_case', zero_case)
+            #     tf.summary.histogram('ridge', ridge)
 
         return result
