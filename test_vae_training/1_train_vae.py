@@ -9,7 +9,7 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:common_microbe]
+#     display_name: Python [conda env:common_microbe] *
 #     language: python
 #     name: conda-env-common_microbe-py
 # ---
@@ -26,6 +26,7 @@
 #
 # More details about the new model can be found: https://docs.google.com/presentation/d/1Q_0BUbfg51OicxY4MdI0IwhdhFfJmzX0f8VyuyGNXrw/edit#slide=id.ge45eb3c133_0_56
 
+# +
 # %load_ext autoreload
 # %autoreload 2
 # %matplotlib inline
@@ -35,6 +36,10 @@ import pandas as pd
 from cm_modules import paths, utils, train_vae_modules
 import scanpy as sc
 import anndata
+
+import tensorflow
+
+print(tensorflow.__version__)
 
 # +
 # Set seeds to get reproducible VAE trained models
@@ -114,8 +119,6 @@ for each_dir in output_dirs:
 
 # Train VAE on new compendium data
 train_vae_modules.train_vae(config_filename, raw_compendium_anndata_filename)
-
-(2142 + 238) / 11857
 
 # +
 # Plot training and validation loss separately

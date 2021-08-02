@@ -210,7 +210,7 @@ def train_vae(config_filename, input_data_filename):
         early_stop=15,
         reduce_lr=10,
         output_subset=None,
-        optimizer='Adam',
+        optimizer_val='Adam',
         clip_grad=5.,
         save_weights=True,
         tensorboard=False

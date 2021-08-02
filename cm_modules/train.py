@@ -37,7 +37,7 @@ from tensorflow.python.framework.ops import disable_eager_execution
 disable_eager_execution()
 
 
-def train(adata, network, output_dir=None, optimizer='RMSprop', learning_rate=None,
+def train(adata, network, output_dir=None, optimizer_val='RMSprop', learning_rate=None,
           epochs=300, reduce_lr=10, output_subset=None, use_raw_as_output=True,
           early_stop=15, batch_size=32, clip_grad=5., save_weights=False,
           validation_split=0.1, tensorboard=False, verbose=True, threads=None,
@@ -57,18 +57,16 @@ def train(adata, network, output_dir=None, optimizer='RMSprop', learning_rate=No
     if output_dir is not None:
         os.makedirs(output_dir, exist_ok=True)
 
+    OptimizerClass = getattr(opt, optimizer_val)
+
     if learning_rate is None:
-        optimizer = opt.__dict__[optimizer](clipvalue=clip_grad)
+        optimizer_val = OptimizerClass(clipvalue=clip_grad)
     else:
-        optimizer = opt.__dict__[optimizer](lr=learning_rate, clipvalue=clip_grad)
+        optimizer_val = OptimizerClass(lr=learning_rate, clipvalue=clip_grad)
     print("about to compiile")
 
-    # Instantiate an optimizer.
-    # if optimizer == "Adam":
-    #     optimizer = tf.keras.optimizers.Adam()
-
-    print("optimizer", optimizer)
-    model.compile(loss=loss, optimizer=optimizer, experimental_run_tf_function=False)
+    print("optimizer", optimizer_val)
+    model.compile(loss=loss, optimizer=optimizer_val, experimental_run_tf_function=False)
 
     # Callbacks
     callbacks = []
